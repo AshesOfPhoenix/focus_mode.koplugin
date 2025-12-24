@@ -1,0 +1,24 @@
+{
+    "name": "KOReader Plugin Dev",
+    "image": "koreader/koappimage:latest",
+    "workspaceFolder": "/workspace",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
+    "forwardPorts": [5900],
+    "containerEnv": {
+        "DISPLAY": ":99",
+        "XDG_RUNTIME_DIR": "/tmp/runtime-ko"
+    },
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y xvfb x11vnc && cd /workspace/koreader && ./kodev fetch-thirdparty && ln -sfn /workspace /workspace/koreader/plugins/focus_mode.koplugin",
+    "postStartCommand": "mkdir -p /tmp/runtime-ko && Xvfb :99 -screen 0 1072x1448x24 & sleep 1 && x11vnc -display :99 -forever -shared -rfbport 5900 -bg -nopw",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "sumneko.lua",
+                "johnnymorganz.stylua",
+                "LuaDA.luadap-vscode",
+                "redhat.vscode-yaml"
+            ]
+        }
+    },
+    "remoteUser": "ko"
+}
