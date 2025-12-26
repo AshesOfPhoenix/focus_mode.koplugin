@@ -3,7 +3,9 @@
     "image": "koreader/koappimage:latest",
     "workspaceFolder": "/workspace",
     "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind",
-    "forwardPorts": [5900],
+    "forwardPorts": [
+        5900
+    ],
     "containerEnv": {
         "DISPLAY": ":99",
         "XDG_RUNTIME_DIR": "/tmp/runtime-ko"
@@ -17,7 +19,17 @@
                 "johnnymorganz.stylua",
                 "LuaDA.luadap-vscode",
                 "redhat.vscode-yaml"
-            ]
+            ],
+            "settings": {
+                "Lua.workspace.ignoreDir": [
+                    "node_modules",
+                    ".git",
+                    "build",
+                    "dist",
+                    "koreader/base",
+                    "koreader/koreader-emulator-aarch64-linux-gnu-debug/koreader/plugins/focus_mode.koplugin/koreader"
+                ]
+            }
         }
     },
     "remoteUser": "ko"

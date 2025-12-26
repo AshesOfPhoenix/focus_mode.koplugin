@@ -7,6 +7,8 @@ local logger = require("logger")
 local InfoMessage = require("ui/widget/infomessage")
 local DateTimeWidget = require("ui/widget/datetimewidget")
 local HtmlBoxWidget = require("ui/widget/htmlboxwidget")
+local ButtonDialog = require("ui/widget/buttondialog")
+local MultiInputDialog = require("ui/widget/multiinputdialog")
 local CenterContainer = require("ui/widget/container/centercontainer")
 local FrameContainer = require("ui/widget/container/framecontainer")
 local Blitbuffer = require("ffi/blitbuffer")
@@ -16,6 +18,7 @@ local GestureRange = require("ui/gesturerange")
 
 local _ = require("gettext")
 local T = require("ffi/util").template
+local Utils = require("utils")
 
 local FocusMode = InputContainer:new({
     name = "focus_mode",
@@ -28,26 +31,9 @@ local FocusMode = InputContainer:new({
     debug_html_dialog = nil, -- reference to the debug HTML dialog instance
 })
 
-local FocusModeHtml = [[
-    <html>
-  <body>
-    <div
-      style="position: relative"
-    >
-      <img
-        src="focus_mode.png"
-        style="max-width: 100%; height: auto; display: block; margin: 0 auto;"
-      />
-      <div style="position: absolute; top: 10%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; justify-content: center; align-items: center;">
-          <h2 style="text-align: center; font-size: 4em; margin-bottom: 1rem;">Focus Mode is active.</h2>
-          <p style="text-align: center; font-size: 2em; margin-top: 0rem;">
-            Focus Mode is active. You are not allowed to use the device.
-          </p>
-      </div>
-    </div>
-  </body>
-</html>
-]]
+FocusMode.readSettings = Utils.readSettings
+FocusMode.readSubSetting = Utils.readSubSetting
+FocusMode.saveSubSetting = Utils.saveSubSetting
 
 local FOCUS_MODE_DIR = T("%1/plugins/%2.koplugin/", DataStorage:getDataDir(), FocusMode.name)
 local META_FILE_PATH = FOCUS_MODE_DIR .. "_meta.lua"
@@ -66,7 +52,7 @@ function FocusMode:init()
     -- init settings
     self.settings = LuaSettings:open(self.settings_file)
 
-    self.focus_mode_settings = self:readFocusModeSettings()
+    self.focus_mode_settings = self:readSettings()
 
     self.last_check_time = os.time()
     self.is_blocking = false
@@ -76,50 +62,6 @@ function FocusMode:init()
 
     -- Register menu to main menu (under "tools") - for both reader and filemanager
     self.ui.menu:registerToMainMenu(self)
-
-    -- Schedule check for focus mode
-    self:scheduleCheck()
-end
-
-function FocusMode:readFocusModeSettings()
-    local default_settings = {
-        enabled = false,
-        from_time = { hour = 6, min = 0 },
-        to_time = { hour = 19, min = 0 },
-    }
-
-    local current_settings = self.settings:readSetting("focus_mode")
-
-    if not current_settings then
-        -- Settings don't exist, save the defaults
-        self.settings:saveSetting("focus_mode", default_settings)
-        self.settings:flush() -- write to disk immediately
-        return default_settings
-    end
-
-    return current_settings
-end
-
--- Helper to read a specific key from the focus_mode sub-dictionary
-function FocusMode:readSubSetting(key)
-    logger.info("FocusMode: Reading %1", key)
-    local settings = self:readFocusModeSettings()
-    return settings[key]
-end
-
--- Helper to save a specific key into the focus_mode sub-dictionary
-function FocusMode:saveSubSetting(key, value)
-    logger.info("FocusMode: Saving %1: %2", key, value)
-    local settings = self:readFocusModeSettings()
-    settings[key] = value
-    self.settings:saveSetting("focus_mode", settings)
-    self.settings:flush()
-end
-
-function FocusMode:scheduleCheck()
-    UIManager:scheduleIn(60, function()
-        self:checkFocusMode()
-    end)
 end
 
 function FocusMode:checkFocusMode()
@@ -210,6 +152,21 @@ function FocusMode:isWithinFocusBlockWindow(now)
         and now.min <= to_time.min
 end
 
+-- this method is called when the document is fully loaded
+function FocusMode:onReaderReady()
+    logger.info("FocusMode: onReaderReady")
+end
+
+-- this method is called when koreader is woken up from suspend
+function FocusMode:onResume()
+    logger.info("FocusMode: onResume")
+end
+
+-- this method is called when koreader is suspended
+function FocusMode:onSuspend()
+    logger.info("FocusMode: onSuspend")
+end
+
 function FocusMode:addToMainMenu(menu_items)
     menu_items.focus_mode = {
         text = _("Focus Mode"),
@@ -252,7 +209,7 @@ function FocusMode:addToMainMenu(menu_items)
                 text = _("Open focus mode HTML (debug)"),
                 keep_menu_open = true,
                 callback = function(touchmenu_instance)
-                    self:onShowFocusModeHtml(touchmenu_instance)
+                    self:onShowFocusModePopup(touchmenu_instance)
                 end,
             },
         },
@@ -272,6 +229,7 @@ function FocusMode:onShowFromTime(touchmenu_instance)
                 min = widget.min,
             }
             self:saveSubSetting("from_time", new_time)
+            -- TODO: Revalidate whether we are within the focus block window
             if touchmenu_instance then
                 touchmenu_instance:closeMenu()
             end
@@ -294,6 +252,7 @@ function FocusMode:onShowToTime(touchmenu_instance)
                 min = widget.min,
             }
             self:saveSubSetting("to_time", new_time)
+            -- TODO: Revalidate whether we are within the focus block window
             if touchmenu_instance then
                 touchmenu_instance:closeMenu()
             end
@@ -303,7 +262,48 @@ function FocusMode:onShowToTime(touchmenu_instance)
     return true
 end
 
-function FocusMode:onShowFocusModeHtml(touchmenu_instance)
+function FocusMode:onShowFocusModePopup(touchmenu_instance)
+    -- Close menu if provided
+    if touchmenu_instance then
+        touchmenu_instance:closeMenu()
+    end
+
+    -- Close existing debug dialog if open
+    if self.debug_html_dialog then
+        UIManager:close(self.debug_html_dialog)
+        self.debug_html_dialog = nil
+    end
+
+    self.debug_html_dialog = ButtonDialog:new({
+        title = _("Focus Mode is active."),
+        title_align = "center",
+        dismissable = false,
+        buttons = {
+            {
+                {
+                    text = _("Cancel"),
+                    callback = function()
+                        UIManager:close(self.debug_html_dialog)
+                        self.debug_html_dialog = nil
+                    end,
+                },
+                {
+                    text = _("Ok... :("),
+                    callback = function()
+                        UIManager:close(self.debug_html_dialog)
+                        self.debug_html_dialog = nil
+                        Dispatcher:execute({ filemanager = true })
+                    end,
+                },
+            },
+        },
+    })
+
+    UIManager:show(self.debug_html_dialog)
+    return true
+end
+
+function FocusMode:onShowFocusModePopupWithImage(touchmenu_instance)
     -- Close menu if provided
     if touchmenu_instance then
         touchmenu_instance:closeMenu()
@@ -321,7 +321,12 @@ function FocusMode:onShowFocusModeHtml(touchmenu_instance)
     -- Note: InfoMessage's 'image' parameter expects a BlitBuffer, not a file path.
     -- We need to load the image first.
     local RenderImage = require("ui/renderimage")
-    local image_bb = RenderImage:renderImageFile(image_path, false, Device.screen:getWidth() * 0.15, Device.screen:getHeight() * 0.15)
+    local image_bb = RenderImage:renderImageFile(
+        image_path,
+        false,
+        Device.screen:getWidth() * 0.15,
+        Device.screen:getHeight() * 0.15
+    )
 
     if not image_bb then
         logger.warn("FocusMode: Failed to load image from:", image_path)
