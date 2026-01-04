@@ -8,7 +8,7 @@ WORK_DIR=$(mktemp -d)
 trap "rm -rf '$WORK_DIR'" EXIT
 
 mkdir -p "$WORK_DIR/focus_mode.koplugin"
-cp "$SCRIPT_DIR/LICENSE.md" "$SCRIPT_DIR/version.txt" "$SCRIPT_DIR/CHANGELOG.md" "$SCRIPT_DIR/README.md" "$SCRIPT_DIR/main.lua" "$SCRIPT_DIR/_meta.lua" "$WORK_DIR/focus_mode.koplugin/"
+cp "$SCRIPT_DIR/LICENSE.md" "$SCRIPT_DIR/README.md" "$SCRIPT_DIR/main.lua" "$SCRIPT_DIR/_meta.lua" "$WORK_DIR/focus_mode.koplugin/"
 
 cd "$WORK_DIR"
 zip -r "$OUTPUT_DIR/focus_mode.koplugin.zip" focus_mode.koplugin
