@@ -8,7 +8,6 @@ local InfoMessage = require("ui/widget/infomessage")
 local DateTimeWidget = require("ui/widget/datetimewidget")
 local HtmlBoxWidget = require("ui/widget/htmlboxwidget")
 local ButtonDialog = require("ui/widget/buttondialog")
-local MultiInputDialog = require("ui/widget/multiinputdialog")
 local InputDialog = require("ui/widget/inputdialog")
 local CenterContainer = require("ui/widget/container/centercontainer")
 local FrameContainer = require("ui/widget/container/framecontainer")
@@ -29,11 +28,11 @@ local T = require("ffi/util").template
 
 local FocusMode = InputContainer:new({
     name = "focus_mode",
-    meta = nil, -- reference to the _meta module
-    is_doc_only = false, -- available in both doc and filemanager models
+    meta = nil,              -- reference to the _meta module
+    is_doc_only = false,     -- available in both doc and filemanager models
     settings_file = DataStorage:getSettingsDir() .. "/focus_mode.lua",
-    settings = nil, -- loaded only when needed
-    updated = false, -- flag to track if settings were updated
+    settings = nil,          -- loaded only when needed
+    updated = false,         -- flag to track if settings were updated
     focus_mode_dialog = nil, -- reference to the main dialog instance
     debug_html_dialog = nil, -- reference to the debug HTML dialog instance
 })
@@ -507,6 +506,7 @@ function FocusMode:showBlockingDialog()
     function self.focus_mode_dialog:onTap()
         return true -- Consume the event
     end
+
     function self.focus_mode_dialog:onSwipe()
         return true -- Consume the event
     end
@@ -844,10 +844,10 @@ function FocusMode:onShowFocusModeHtmlOld(touchmenu_instance)
 
     html_widget:setContent(
         html_body,
-        css, -- css
-        20, -- default font size
-        false, -- is_xhtml
-        false, -- no_css_fixes
+        css,      -- css
+        20,       -- default font size
+        false,    -- is_xhtml
+        false,    -- no_css_fixes
         image_dir -- resource_directory
     )
 
