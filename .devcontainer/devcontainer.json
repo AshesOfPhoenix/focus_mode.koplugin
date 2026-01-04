@@ -10,8 +10,7 @@
         "DISPLAY": ":99",
         "XDG_RUNTIME_DIR": "/tmp/runtime-ko"
     },
-    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y xvfb x11vnc && cd /workspace/koreader && ./kodev fetch-thirdparty && ln -sfn /workspace /workspace/koreader/plugins/focus_mode.koplugin",
-    "postStartCommand": "mkdir -p /tmp/runtime-ko && Xvfb :99 -screen 0 1072x1448x24 & sleep 1 && x11vnc -display :99 -forever -shared -rfbport 5900 -bg -nopw",
+    "postCreateCommand": "sudo apt-get update && sudo apt-get install -y xvfb x11vnc && cd /workspace/koreader && ./kodev fetch-thirdparty",
     "customizations": {
         "vscode": {
             "extensions": [
@@ -26,11 +25,12 @@
                     ".git",
                     "build",
                     "dist",
-                    "koreader/base",
-                    "koreader/koreader-emulator-aarch64-linux-gnu-debug/koreader/plugins/focus_mode.koplugin/koreader"
+                    "base",
+                    "koreader-emulator-aarch64-linux-gnu-debug/koreader"
                 ]
             }
         }
     },
-    "remoteUser": "ko"
+    "remoteUser": "ko",
+    "overrideCommand": false
 }
