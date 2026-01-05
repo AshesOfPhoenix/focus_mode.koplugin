@@ -16,4 +16,4 @@ jobs:
       - name: Install Prettier
         run: npm install prettier
       - name: Run Prettier check (fail if not formatted)
-        run: npx prettier --check "**/*.md"
+        run: npx prettier --check "**/*.md" "!CHANGELOG.md"
