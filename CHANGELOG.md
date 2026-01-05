@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.7](https://github.com/AshesOfPhoenix/focus_mode.koplugin/compare/v0.0.6...v0.0.7) (2026-01-05)
+
+
+### Bug Fixes
+
+* remove tutorial pages and redirect homepage ([236b6e3](https://github.com/AshesOfPhoenix/focus_mode.koplugin/commit/236b6e385152261dda46c1cde380d38d5e7e0459))
+
 ## [0.0.6](https://github.com/AshesOfPhoenix/focus_mode.koplugin/compare/v0.0.5...v0.0.6) (2026-01-05)
 
 
